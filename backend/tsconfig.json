@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    /* File paths */
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    /* Module system for Node.js (ESM) */
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2020",
+
+    /* Node.js specific settings */
+    "lib": ["ES2020"],
+    "types": ["node"],
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+
+    /* TypeScript strictness */
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Output maps for debugging */
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}

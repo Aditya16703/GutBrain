@@ -9,7 +9,7 @@ mongoose.connect('mongodb+srv://ac3413452_db_user:Shivendra123@cluster0.4h7ayno.
 
 
 const userSchema =  new mongoose.Schema({
-    usename : {
+    username : {
         type : String , 
         required : true
     },
@@ -30,32 +30,63 @@ const userSchema =  new mongoose.Schema({
     }
 });
 
+export const User = mongoose.model("User" , userSchema);
+
+
 
 export interface IContent extends Document {
-    userId : mongoose.Types.ObjectId;
-     type : "document" | "image" | "video" | "audio";
-     link : string;
+    userId : mongoose.Types.ObjectId ;
      title : string ;
+     link : string;
+     tages :  mongoose.Types.ObjectId  ;
+     type : "document" | "image" | "video" | "audio" ;
      createdAt : Date;
 }
 
-const contentSchem = new Schema<IContent>({
+const contentSchema = new Schema<IContent>({
     userId : {
         type : mongoose.Schema.Types.ObjectId,
         ref : "User",
         required : true
     },
+
+
+    title : {
+        type : String , 
+ 
+    },
+
+    link : {
+        type : String ,
+    },
+
+
+    tages : [{
+        type : mongoose.Schema.Types.ObjectId , 
+        ref : "Tags",
+    }],
     type : {
         type : String, 
         enum : ["document", "image", "video" , "audio"]
+    },
+
+    createdAt : {
+        type : Date , 
+        default : Date.now
     }
+
+    
     
 })
 
 
 
 
- export const User = mongoose.model("User" , userSchema);
+ const LinkSchema = new Schema ({
+      hash : String , 
+      userId : { type : mongoose.Schema.Types.ObjectId , ref : "User"  , required : true, unique : true },
+ })
 
 
-
+export const LinkModel = mongoose.model("Links", LinkSchema);
+export const ContentModel = mongoose.model("Content", contentSchema);

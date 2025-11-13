@@ -5,6 +5,10 @@ import jwt from 'jsonwebtoken';
 import {User} from './db.js';
 import { JWT_SECRET } from './config.js';
 import  bcrypt from 'bcryptjs';
+import { LinkModel , ContentModel } from './db.js';
+import  { userMiddleware }from './middleware.js';
+import { random }  from './util.js'
+
 const app = express();
 app.use(cors());
 
@@ -22,7 +26,7 @@ const signupSchema = zod.object({
 
 
 
- app.post("/api/v1/signup" , async(req, res) =>{
+ app.post("/api/v1/signup" , userMiddleware , async(req, res) =>{
     try {
 
         const body = req.body;
@@ -42,7 +46,7 @@ const signupSchema = zod.object({
             })
         }
 
-        const newUser = new User({
+        const newUser = await User.create({
             username : body.username,
             password : body.password,
             email : body.email,
@@ -57,7 +61,7 @@ const signupSchema = zod.object({
                 JWT_SECRET
         )
 
-        await newUser.save();
+        
     }
 
     catch (error){
@@ -83,7 +87,7 @@ const signupSchema = zod.object({
  
 
 
- app.post("/api/v1/signin" , async(req , res) =>{
+ app.post("/api/v1/signin" , userMiddleware , async(req , res) =>{
 
     try {
          const body = req.body;
@@ -140,11 +144,25 @@ const signupSchema = zod.object({
  })
 
 
- app.post("/api/v1/content" , (req , res ) =>{
+ app.post("/api/v1/content" , userMiddleware , async(req , res ) =>{
 
     try {
 
+        const link  = req.body.link ;
+        const type  = req.body.type ;
         
+        await ContentModel.create({
+            userId : req.body.userId  ,
+            title : req.body.title,
+            link ,
+            tages : [] ,
+            type  ,
+        })
+        
+
+        res.json({
+            message : "Content created successfully"
+        })
 
     } catch (error){
 
@@ -152,19 +170,141 @@ const signupSchema = zod.object({
         return res.status(500).json({
             message : "Internal server error"
         })
-
     }
+})
 
+ app.get("/api/v1/content" , userMiddleware , async(req, res) => {
+    try {
+          const userId = req.query.userId ;
+          const content = await ContentModel.find({ userId : userId }).populate("userId" , "username");
+          return res.json({
+            content  : content
+          })
+    }catch (error){
+        console.log(error);
+        return res.status(500).json({
+            message : "Internal server error"
+        })
+    }
+ })
 
+ app.delete("/api/v1/content" , userMiddleware ,(req , res) =>{
+
+    const  contentId = req.query.contentId ;
+    ContentModel.findByIdAndDelete(contentId).then(() => {
+        return res.json({
+            message : "Content deleted successfully"
+        })
+    }).catch((error) => {
+        console.log(error);
+        return res.status(500).json({
+            message : "Internal server error"
+        })
     })
-
- app.get("/api/v1/content" , (res , rep) =>{
     
  })
 
- app.delete("/api/v1/content" , (res , rep) =>{
-    
+
+ app.post("/api/v1/brain/share" , userMiddleware , async (req , res) =>
+ {
+    try {
+
+        const share = req.body.share;
+        console.log("Share received: ", share);
+
+        if (share) {
+             const existingLink = await LinkModel.findOne ({
+                userId : req.body.userId ,
+             });
+
+             if(existingLink){
+                res.json({
+                    hash : existingLink.hash
+            })
+
+            return ;
+             }
+
+             const hash = random(10) ;
+             await LinkModel.create({
+                userId : req.body.userId ,
+                hash : hash 
+             })
+
+
+             res.json({
+                hash : hash
+            })
+        } else { 
+            await LinkModel.deleteOne({
+                userId : req.body.userId
+            });
+
+            res.json({
+                message : "Link deleted successfully"   
+            })
+        }
+        
+
+    }catch (error){
+        console.log(error);
+        return res.status(500).json({
+            message : "Internal server error"
+        })
+    }
+
+ })
+
+
+ app.get("/api/v1/brain/:shareLink" , async (req , res) => {
+    try {
+
+        const  hash = req.params.shareLink;
+
+        const link = await LinkModel.findOne({
+            hash : hash 
+        });
+
+        if (!link){
+            return res.status(411).json({
+                message : "Link not found"
+            })
+            return ; 
+        }
+
+        //user Id 
+
+        const content = await ContentModel.find({
+            userId : link.userId
+        })
+
+        console.log(link); 
+        const user = await User.findOne({
+            _id : link.userId
+        })
+
+        if(!user) {
+            res.status(411).json({
+                message : "user not found , error should ideally not happen"
+            })
+
+            return ;
+        }
+
+
+        res.json({
+            username : user.username,
+            content : content
+        })
+
+    }catch (error){
+        console.log(error);
+        return res.status(500).json({
+            message : "Internal server error"
+        })
+    }
  })
 
 const port = 3000;
+app.listen(port);
 

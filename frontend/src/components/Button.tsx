@@ -9,6 +9,7 @@ interface ButtonInterface {
   startIcon?: ReactElement;
   endIcon?: ReactElement;
   variant: "primary" | "secondary";
+  onClick ?: () => void ;
 }
 
 const sizeStyles = {
@@ -19,19 +20,19 @@ const sizeStyles = {
 
 const variantStyles = {
   primary: "bg-purple-600 text-white",
-  secondary: "bg-gray-400 text-purple-600",
+  secondary: "bg-slate-300 text-purple-600",
 };
 
 export function Button(props: ButtonInterface) {
 
   return (
-    <button className={`${sizeStyles[props.size]} ${variantStyles[props.variant]}  flex items-center justify-center gap-2`}>
+    <button  onClick = {props.onClick} className={`${sizeStyles[props.size]} ${variantStyles[props.variant]}  flex items-center justify-between gap-1`} >
       
         {props.startIcon && <span className="text-xs">
             {props.startIcon}
           </span>}
         
-        <div className="pl-2 pr-2">{props.title}</div>
+        <div className="pl-1 pr-1">{props.title}</div>
         
         {props.endIcon && <span className="text-xs">
             {props.endIcon}

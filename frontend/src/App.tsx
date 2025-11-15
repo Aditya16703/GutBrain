@@ -15,7 +15,7 @@ function App() {
  <>
  <div className = " ">  
   <Sidebar/>
-<div className = "p-4 ml-72 min-h-screen bg-gray-100  border-1">
+<div className = "p-4 ml-72 min-h-screen bg-gray-100  ">
       <CreateContentModel open = {modalOpen}  onClose= { ()=>{
         setModalOpen(false);
       }} />

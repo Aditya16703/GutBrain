@@ -4,8 +4,19 @@ import { JWT_SECRET  } from "./config.js";
 
 export const userMiddleware = (req: Request, res: Response, next: NextFunction) => {
     try {
-    const header = req.headers["authorization"];
-    const decoded = jwt.verify(header as string, JWT_SECRET )
+    const authHeader = req.headers["authorization"];
+    if (!authHeader){
+        return res.status(401).json({message : " No Authorization header"});
+    }
+
+     const parts = authHeader.split(" ");
+    if (parts.length !== 2 || parts[0] !== "Bearer") {
+      return res.status(401).json({ message: "Invalid Authorization header format" });
+    }
+
+    const token = parts[1];
+
+    const decoded = jwt.verify(token as string, JWT_SECRET )
     if (decoded) {
         if (typeof decoded === "string") {
             res.status(403).json({
@@ -26,7 +37,7 @@ export const userMiddleware = (req: Request, res: Response, next: NextFunction) 
 }catch(error) {
     console.log(error) ;
     res.status(500).json({
-        message : "Internal server error" 
+        message : "Invalid or expired token" 
     })
 } 
 

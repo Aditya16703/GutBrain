@@ -61,6 +61,12 @@ const signupSchema = zod.object({
                 JWT_SECRET
         )
 
+
+        return res.status(201).json({
+          message: "User created successfully",
+          token: token,
+          });
+
         
     }
 

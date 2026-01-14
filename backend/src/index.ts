@@ -26,14 +26,14 @@ const signupSchema = zod.object({
 
 
 
- app.post("/api/v1/signup" , userMiddleware , async(req, res) =>{
+ app.post("/api/v1/signup" ,  async(req, res) =>{
     try {
 
         const body = req.body;
         const {success} = signupSchema.safeParse(body);
 
         if(!success){
-            res.status(400).json({
+           return res.status(400).json({
                 message : "Invalid data "
             })
         }
@@ -41,10 +41,13 @@ const signupSchema = zod.object({
         const existingUser = await User.findOne({username : body.username});
 
         if(existingUser){
-            res.status(400).json({
+           return res.status(400).json({
                 message : "Username already exists"
             })
         }
+
+        const hashedPassword = await bcrypt.hash(body.password, 10);
+        body.password = hashedPassword ;
 
         const newUser = await User.create({
             username : body.username,
@@ -62,10 +65,11 @@ const signupSchema = zod.object({
         )
 
 
-        return res.status(201).json({
-          message: "User created successfully",
-          token: token,
-          });
+
+        return res.json({
+             message : "User created successfully",
+             token : token
+        })
 
         
     }
@@ -93,14 +97,14 @@ const signupSchema = zod.object({
  
 
 
- app.post("/api/v1/signin" , userMiddleware , async(req , res) =>{
+ app.post("/api/v1/signin" ,  async(req , res) =>{
 
     try {
          const body = req.body;
         const {success} = signinSchema.safeParse(body);
 
         if(!success){
-            res.status(400).json({
+          return  res.status(400).json({
                 message :  "Invalid input"
             });
         
@@ -108,7 +112,7 @@ const signupSchema = zod.object({
 
         const existingUser = await User.findOne({
             username : req.body.username,
-            password : req.body.password
+            
     })
 
         if(!existingUser){
@@ -133,7 +137,7 @@ const signupSchema = zod.object({
         )
 
         return res.json({
-      token: token,
+          token: token,
     });
 
 
@@ -141,7 +145,7 @@ const signupSchema = zod.object({
 
     }catch(error){
 
-         console.log(error);
+     console.log(error);
     return res.status(500).json({
         message: "Internal server error"
     })

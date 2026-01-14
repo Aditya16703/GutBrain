@@ -35,7 +35,7 @@ export const User = mongoose.model("User" , userSchema);
 
 
 export interface IContent extends Document {
-    userId : mongoose.Types.ObjectId ;
+     userId : mongoose.Types.ObjectId ;
      title : string ;
      link : string;
      tages :  mongoose.Types.ObjectId  ;

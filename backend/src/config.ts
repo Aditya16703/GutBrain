@@ -1,4 +1,6 @@
-export const JWT_SECRET = "aadi";
+import dotenv from "dotenv";
+dotenv.config();
 
-export const mongoURL =
-  "mongodb+srv://ac3413452_db_user:Shivendra123@cluster0.4h7ayno.mongodb.net/";
+export const JWT_SECRET = process.env.JWT_SECRET || "default_secret";
+export const mongoURL = process.env.MONGO_URL || "";
+export const PORT = process.env.PORT || 3000;

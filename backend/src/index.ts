@@ -3,9 +3,9 @@ import cors from 'cors';
 import zod from 'zod';
 import jwt from 'jsonwebtoken';
 import {User} from './db.js';
-import { JWT_SECRET } from './config.js';
+import { JWT_SECRET, PORT } from './config.js';
 import  bcrypt from 'bcryptjs';
-import { LinkModel , ContentModel } from './db.js';
+import { LinkModel , ContentModel, connectDB } from './db.js';
 import  { userMiddleware }from './middleware.js';
 import { random }  from './util.js'
 
@@ -59,7 +59,7 @@ const signupSchema = zod.object({
 
         const token = jwt.sign(
              {
-                userid : newUser._id,
+                userId : newUser._id,
              },
                 JWT_SECRET
         )
@@ -131,7 +131,7 @@ const signupSchema = zod.object({
 
         const token = jwt.sign(
             {
-                 userid : existingUser._id,
+                 userId : existingUser._id,
             },
             JWT_SECRET
         )
@@ -153,19 +153,32 @@ const signupSchema = zod.object({
     
  })
 
+ const contentSchema = zod.object({
+    link: zod.string().url(),
+    type: zod.enum(["document", "image", "video", "audio"]),
+    title: zod.string().min(1)
+ });
 
  app.post("/api/v1/content" , userMiddleware , async(req , res ) =>{
 
     try {
 
+        const body = req.body;
+        const {success} = contentSchema.safeParse(body);
+        if(!success){
+            return res.status(400).json({
+                message: "Invalid inputs"
+            })
+        }
+
         const link  = req.body.link ;
         const type  = req.body.type ;
         
         await ContentModel.create({
-            userId : req.body.userId  ,
+            userId : req.userId,
             title : req.body.title,
             link ,
-            tages : [] ,
+            tags : [] ,
             type  ,
         })
         
@@ -185,7 +198,7 @@ const signupSchema = zod.object({
 
  app.get("/api/v1/content" , userMiddleware , async(req, res) => {
     try {
-          const userId = req.query.userId ;
+          const userId = req.userId;
           const content = await ContentModel.find({ userId : userId }).populate("userId" , "username");
           return res.json({
             content  : content
@@ -200,8 +213,9 @@ const signupSchema = zod.object({
 
  app.delete("/api/v1/content" , userMiddleware ,(req , res) =>{
 
-    const  contentId = req.query.contentId ;
-    ContentModel.findByIdAndDelete(contentId).then(() => {
+    const contentId = req.query.contentId; 
+    // Ideally check if content belongs to user before deleting
+    ContentModel.findOneAndDelete({_id: contentId, userId: req.userId}).then(() => {
         return res.json({
             message : "Content deleted successfully"
         })
@@ -223,40 +237,40 @@ const signupSchema = zod.object({
         console.log("Share received: ", share);
 
         if (share) {
-             const existingLink = await LinkModel.findOne ({
-                userId : req.body.userId ,
-             });
 
-             if(existingLink){
-                res.json({
-                    hash : existingLink.hash
+            const existingLink = await LinkModel.findOne({
+                userId : req.userId
             })
 
-            return ;
-             }
-
+            if (existingLink) {
+                return res.json({
+                    hash : existingLink.hash
+                })
+                return ;
+            }
              const hash = random(10) ;
              await LinkModel.create({
-                userId : req.body.userId ,
+                userId : req.userId ,
                 hash : hash 
              })
 
 
              res.json({
-                hash : hash
-            })
+                 hash : hash
+                
+             })
+
         } else { 
             await LinkModel.deleteOne({
-                userId : req.body.userId
+                userId : req.userId
             });
 
             res.json({
-                message : "Link deleted successfully"   
+                message : "Remove link"   
             })
         }
         
-
-    }catch (error){
+    } catch (error){
         console.log(error);
         return res.status(500).json({
             message : "Internal server error"
@@ -315,6 +329,9 @@ const signupSchema = zod.object({
     }
  })
 
-const port = 3000;
-app.listen(port);
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+});
 

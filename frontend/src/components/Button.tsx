@@ -26,7 +26,7 @@ const variantStyles = {
 export function Button(props: ButtonInterface) {
 
   return (
-    <button  onClick = {props.onClick} className={`${sizeStyles[props.size]} ${variantStyles[props.variant]}  flex items-center justify-between gap-1`} >
+    <button onClick={props.onClick} className={`${sizeStyles[props.size]} ${variantStyles[props.variant]} flex items-center justify-between gap-1 transform transition duration-200 ease-out hover:scale-105 hover:shadow-xl hover:-translate-y-1`}>
       
         {props.startIcon && <span className="text-xs">
             {props.startIcon}

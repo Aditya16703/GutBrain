@@ -10,8 +10,8 @@ import  { userMiddleware }from './middleware.js';
 import { random }  from './util.js'
 
 const app = express();
-app.use(cors());
 
+app.use(cors());
 app.use(express.json());
 
 const signupSchema = zod.object({
@@ -156,7 +156,8 @@ const signupSchema = zod.object({
  const contentSchema = zod.object({
     link: zod.string().url(),
     type: zod.enum(["document", "image", "video", "audio"]),
-    title: zod.string().min(1)
+    title: zod.string().min(1) ,
+    platform : zod.enum(["twitter" , "youtube"  , "linkedin" , "other"])
  });
 
  app.post("/api/v1/content" , userMiddleware , async(req , res ) =>{
@@ -167,12 +168,14 @@ const signupSchema = zod.object({
         const {success} = contentSchema.safeParse(body);
         if(!success){
             return res.status(400).json({
-                message: "Invalid inputs"
+                message: "Invalid inputs",
+                
             })
         }
 
         const link  = req.body.link ;
         const type  = req.body.type ;
+        const platform = req.body.platform;
         
         await ContentModel.create({
             userId : req.userId,
@@ -180,6 +183,7 @@ const signupSchema = zod.object({
             link ,
             tags : [] ,
             type  ,
+            platform
         })
         
 
@@ -192,7 +196,7 @@ const signupSchema = zod.object({
         console.log(error);
         return res.status(500).json({
             message : "Internal server error"
-        })
+        });
     }
 })
 

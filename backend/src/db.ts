@@ -48,6 +48,7 @@ export interface IContent extends Document {
      link : string;
      tags :  mongoose.Types.ObjectId[] ;
      type : "document" | "image" | "video" | "audio" ;
+     platform : "twitter" | "youtube" | "linkedin" | "other";
      createdAt : Date;
 }
 
@@ -78,6 +79,11 @@ const contentSchema = new Schema<IContent>({
         enum : ["document", "image", "video" , "audio"]
     },
 
+    platform : {
+        type : String, 
+        enum : ["twitter" , "youtube"  , "linkedin" , "other"]
+    },
+
     createdAt : {
         type : Date , 
         default : Date.now
@@ -90,11 +96,15 @@ const contentSchema = new Schema<IContent>({
 
 
 
- const LinkSchema = new Schema ({
-      hash : String , 
-      userId : { type : mongoose.Schema.Types.ObjectId , ref : "User"  , required : true, unique : true },
- })
+export interface ILink extends Document {
+    hash: string;
+    userId: mongoose.Types.ObjectId;
+}
 
+const linkSchema = new Schema<ILink>({
+    hash: { type: String, required: true, unique: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
+});
 
-export const LinkModel = mongoose.model("Links", LinkSchema);
+export const LinkModel = mongoose.model("Links", linkSchema);
 export const ContentModel = mongoose.model("Content", contentSchema);
